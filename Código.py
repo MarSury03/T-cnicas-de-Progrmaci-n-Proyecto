@@ -118,6 +118,93 @@ def establecer_relacion_pbi_educacion(df_gasto_edu,df_pbi_percapita):
     return df_relacion_pbi_educacion
 
 
+####--------------------------------FUNCIONES DE LA BD ANALFABETISMO
+def cargar_df_analfabetismo(ruta:str):
+    archivo = pd.read_excel(ruta)
+    df = pd.DataFrame(archivo)
+    
+    #sacamos los departamentos
+    departamentos = df['TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2012 - 2022']
+    departamentos = departamentos.iloc[10:].reset_index(drop=True)
+    
+    # limpiamos la data
+    df = df.drop(columns=['TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2012 - 2022'])
+    df = df[10:]
+    df = df.reset_index(drop=True)
+    
+    #ingresamos las nuevas columnas
+    columnas = []
+    for año in range(2008,2023):
+        columnas.append(año)
+    
+    df.columns = columnas
+    
+    #insertamos la columna departamento
+    indice_callao = departamentos[departamentos == 'Prov. Const. del Callao'].index[0]
+    departamentos[indice_callao] = 'Callao' # cambiamos el nombre a Callao
+    df.insert(0,'Departamento',departamentos)
+    
+    #borramos las columnas que no utilizaremos
+    df = df.drop(columns=[2008,2009,2010,2022])
+    
+    return df
+
+def DF_con_tasa_promedio_analfabetismo(df):
+    df = df.set_index('Departamento')
+    df = df.transpose() #para que los departamentos sean las columnas
+    
+    promedios = []
+    for departamento in df:
+        prom = df[departamento].mean()
+        promedios.append(round(prom,4))
+    
+    #para que los años vuelvan a ser las columnas
+    df = df.transpose()
+    
+    #añadimos la columna de tasa promedio de analfabetismo
+    df.insert(len(df.columns),'Tasa promedio',promedios)
+    
+    #reseteamos indices
+    df.reset_index(inplace=True)
+        
+    return df
+
+def grafico_analfabetismo_tasa_promedio_por_dpto(df):
+    #filtramos solo las columnas necesarias para graficar
+    df = df[['Departamento','Tasa promedio']]
+    
+    #ordenamos la data de mayor a menor
+    df = df.sort_values(by='Tasa promedio', ascending=False)
+    
+    plt.figure(figsize=(8,8))
+    plt.xticks(rotation=90)
+    
+    #pa las 4 tasas más grandes
+    barras_grandes = plt.bar(df['Departamento'].iloc[:4], df['Tasa promedio'].iloc[:4], color='red',label='Tasas más grandes')
+    #barras del medio
+    plt.bar(df['Departamento'].iloc[4:21],df['Tasa promedio'].iloc[4:21], color='grey')
+    #pa las 4 tasas más pequeñas
+    barras_pequeñas = plt.bar(df['Departamento'].iloc[-4:], df['Tasa promedio'].iloc[-4:], color='green',label='Tasas más pequeñas')
+    
+
+    # Añadir etiquetas de valores encima de las barras más grandes
+    for bar in barras_grandes:
+        valor_Y = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2, valor_Y , round(valor_Y , 2), va='bottom', ha='center', fontsize=8, color='black',fontweight='bold',rotation=50)
+    
+    # Añadir etiquetas de valores encima de las barras más pequeñas
+    for bar in barras_pequeñas:
+        valor_Y = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2, valor_Y, round(valor_Y, 2), va='bottom', ha='center', fontsize=8, color='black',fontweight='bold',rotation=50)
+    
+    plt.title('TASA PROMEDIO DE ANALFABETISMO EN LOS DEPARTAMENTOS \nDEL PERÚ DESDE EL 2011 AL 2021 \n (Porcentaje respecto del total de la población mayor a 15 años)')
+    plt.ylabel('% DE POBLACIÓN ANALFABETA')
+    plt.xlabel('DEPARTAMENTOS')
+    plt.legend()
+    plt.show()
+    
+    return df
+
 ####---------------------------------FUNCIÓN ESTANDARIZADORA DE INPUTS
 def pedir_departamento():
     dep = input('Ingrese el departamento a analizar: ').title()
@@ -125,7 +212,10 @@ def pedir_departamento():
     #nos cercioramos de que el departamento y nivel académico introducidos se encuentren escritos correctamente
     if ' De ' in dep:
         dep = dep.replace(' De ',' de ')
-        
+    
+    if dep == 'Apurimac':
+        dep = 'Apurímac'
+
     if dep == 'Callao':
         dep = 'Prov. Const. del Callao'
     
@@ -181,8 +271,179 @@ def pedir_año():
 
 
 ####-------------------------------------GRÁFICOS
+def grafico_ingreso(df_pbi_percapita,cant_departamentos,departamentos_a_comparar):
+    plt.subplot(2,2,1)
+    #sacamos los años para q posteriormente sean el eje x del grafico de lineas
+    años = df_pbi_percapita.columns.tolist()[1:]
+    
+    #quitamos el total
+    df_pbi_percapita = df_pbi_percapita.iloc[1:].reset_index(drop=True)
+    
+    datos = []
+    for departamento in departamentos_a_comparar:
+        for i in range(len(df_pbi_percapita)): #para q recorra fila por fila de df
+            if df_pbi_percapita['Departamento'][i] == departamento:
+                datos.append(df_pbi_percapita.iloc[i].tolist()[1:])
+    
+    for i in range(cant_departamentos):
+        colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        
+        # Encontrar el índice del máximo y mínimo
+        indice_max = datos[i].index(max(datos[i]))
+        indice_min = datos[i].index(min(datos[i]))
+        
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}')
+    
+    plt.xticks(años,rotation=90)    
+    plt.title(f'EVOLUCION DEL INGRESO PER CAPITA DE LOS DEPARTAMENTOS \n{departamentos_a_comparar}')
+    plt.xlabel('AÑOS')
+    plt.ylabel('PBI PER CAPITA ANUAL (SOLES)')
+    
+    plt.grid(True)  #pa añadir cuadriculas
+    plt.legend()
+
+    
+
+def grafico_gasto(df_gasto_edu,cant_departamentos,departamentos_a_comparar):
+    plt.subplot(2,2,2)
+    #sacamos los años para q posteriormente sean el eje x del grafico de lineas
+    años = df_gasto_edu.columns.tolist()[1:]
+    
+    datos = []
+    for departamento in departamentos_a_comparar:
+        for i in range(len(df_gasto_edu)): #para q recorra fila por fila de df
+            if df_gasto_edu['Departamento / Nivel educativo'][i] == departamento:
+                df_filtrada = df_gasto_edu.iloc[i+1:i+4].reset_index(drop=True)
+                
+                #para cada año, calculamos el promedio del gasto en inicial, prim y sec
+                gastos_promedio_añoX = []
+                for año in años:
+                    prom_año = round(df_filtrada[año].mean(),4)
+                    gastos_promedio_añoX.append(prom_año)
+                
+                datos.append(gastos_promedio_añoX)
+                    
+    for i in range(cant_departamentos):
+        colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        
+        # Encontrar el índice del máximo y mínimo
+        indice_max = datos[i].index(max(datos[i]))
+        indice_min = datos[i].index(min(datos[i]))
+        
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}')
+    
+    plt.xticks(años,rotation=90)    
+    plt.title(f'EVOLUCION DEL GASTO EN EDUCACIÓN POR ALUMNO DE LOS DEPARTAMENTOS \n{departamentos_a_comparar}')
+    plt.xlabel('AÑOS')
+    plt.ylabel('GASTO POR ALUMNO ANUAL (SOLES)')
+    
+    plt.grid(True)  #pa añadir cuadriculas
+    plt.legend()
+
+    
+def grafico_analfabetismo(df_analfabetismo,cant_departamentos,departamentos_a_comparar):
+    plt.subplot(2,2,3)
+    #sacamos los años para q posteriormente sean el eje x del grafico de lineas
+    años = df_analfabetismo.columns.tolist()[1:]
+    
+    datos = []
+    for departamento in departamentos_a_comparar:
+        for i in range(len(df_analfabetismo)): #para q recorra fila por fila de df
+            if df_analfabetismo['Departamento'][i] == departamento:
+                datos.append(df_analfabetismo.iloc[i].tolist()[1:])
+    
+    for i in range(cant_departamentos):
+        colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        
+        # Encontrar el índice del máximo y mínimo
+        indice_max = datos[i].index(max(datos[i]))
+        indice_min = datos[i].index(min(datos[i]))
+        
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}')
+    
+    plt.xticks(años,rotation=90)    
+    plt.title(f'EVOLUCION DE LA TASA DE ANALFABETISMO DE LOS DEPARTAMENTOS \n{departamentos_a_comparar}')
+    plt.xlabel('AÑOS')
+    plt.ylabel('TASA DE ANALFABETISMO ANUAL')
+    
+    plt.grid(True)  #pa añadir cuadriculas
+    plt.legend()
+
+    
+def grafico_relacion_ingreso_gasto(df_relacion_pbi_educacion,cant_departamentos,departamentos_a_comparar):
+    plt.subplot(2,2,4)
+    
+    años = df_relacion_pbi_educacion.columns.tolist()[1:]
+    
+    datos = []
+    for departamento in departamentos_a_comparar:
+        for i in range(len(df_relacion_pbi_educacion)):
+            if df_relacion_pbi_educacion['Departamento / Nivel educativo'][i] == departamento:
+                df_filtrada = df_relacion_pbi_educacion.iloc[i+1:i+4].reset_index(drop=True)
+                
+                #para cada año, calculamos el promedio de la relacion en inicial, prim y sec
+                relacion_promedio_añoX = []
+                for año in años:
+                    prom_año = round(df_filtrada[año].mean(),4)
+                    relacion_promedio_añoX.append(prom_año)
+                
+                datos.append(relacion_promedio_añoX)
+    
+    for i in range(cant_departamentos):
+        colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        
+        # Encontrar el índice del máximo y mínimo
+        indice_max = datos[i].index(max(datos[i]))
+        indice_min = datos[i].index(min(datos[i]))
+        
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}') 
+    
+    plt.xticks(años,rotation=90)    
+    plt.title(f'EVOLUCION PROMEDIO DE LA RELACION ENTRE EL \nGASTO PUBLICO POR ALUMNO y PBI PER CAPITA DE LOS \nDEPARTAMENTOS {departamentos_a_comparar}')
+    plt.xlabel('AÑOS')
+    plt.ylabel('GASTO(SOLES)/PBI PER CAPITA')
+    
+    plt.grid()
+    plt.legend()
+
+def grafico_dashboard():
+    cant_departamentos = int(input('Ingrese la cantidad de departamentos a comparar: '))
+    
+    departamentos_a_comparar = []
+    for i in range(cant_departamentos):
+        departamento = pedir_departamento()
+        departamentos_a_comparar.append(departamento)
+    
+    plt.figure(figsize=(20,22))
+    
+
+    grafico_ingreso(df_pbi_percapita,cant_departamentos,departamentos_a_comparar)
+    
+
+    grafico_gasto(df_gasto_edu,cant_departamentos,departamentos_a_comparar)
+
+    grafico_relacion_ingreso_gasto(df_relacion_pbi_educacion,cant_departamentos,departamentos_a_comparar)
+    
+    grafico_analfabetismo(df_analfabetismo,cant_departamentos,departamentos_a_comparar)
+    
+    plt.show()
+
+
+#### -------------------------------------GRÁFICO CON OPCIONES
 def graf_a():
-    ###------------------pa todos los dptos, aÒo especÌfico y nivel acadÈmico
+    ###------------------pa todos los dptos, año específico y nivel académico
     año = pedir_año()
     nivel_acad = pedir_nivel_acad()
 
@@ -190,7 +451,7 @@ def graf_a():
     df_analisis = df_relacion_pbi_educacion[4:]
     df_analisis.reset_index(drop=True,inplace=True)
 
-    #filtramos el nivel educativo de interÈs
+    #filtramos el nivel educativo de interes
     departamentos = df_pbi['Departamento'][:-1].tolist() #sacamos los dptos
 
     for i in range(len(df_analisis)):
@@ -199,7 +460,7 @@ def graf_a():
 
     df_analisis.reset_index(drop=True,inplace=True)
 
-    #nos quedamos con el aÒo de interÈs
+    #nos quedamos con el aÒo de interes
     años_a_borrar = list(range(2011, 2022))
 
     for year in años_a_borrar:
@@ -218,9 +479,8 @@ def graf_a():
     #graficamos
     plt.figure(figsize=(8,8))
 
-    df_analisis.plot(kind='bar',legend=False,xlabel='DEPARTAMENTOS',ylabel='GASTO(SOLES)/PBI PER C¡PITA')
+    df_analisis.plot(kind='bar',legend=False,xlabel='DEPARTAMENTOS',ylabel='GASTO(SOLES)/PBI PER CÁPITA')
     plt.title(f'RELACION DEL PBI PER CAPITA Y EL GASTO PUBLICO POR \nALUMNO EN EDUCACION {nivel_acad.upper()} EN EL AÑO {str(año).upper()}')
-
     plt.show()
 
 def graf_b():
@@ -415,77 +675,109 @@ def graf_f():
         plt.plot(años,df_regiones_prom.iloc[i][1:],label=regiones[i],color=colores[i])
     
     plt.xticks(años,rotation=90)  
-    plt.title(f'EVOLUCION DE LA RELACION ENTRE EL GASTO PUBLICO EN \nEDUCACION {nivel_acad}/PBI PER CAPITA DE LAS REGIONES {regiones}')
+    plt.title(f'EVOLUCION DE LA RELACION ENTRE EL GASTO PUBLICO EN \nEDUCACION {nivel_acad.upper()}/PBI PER CAPITA DE LAS REGIONES {regiones}')
     plt.xlabel('Años')
     plt.ylabel('GASTO(SOLES)/PBI PER CAPITA')
     
     plt.legend()
     plt.show()
+    
+    return df_regiones_prom
 
 def graf_g():
-    """
-    Comparación del Crecimiento del PIB per cápita y el Gasto en Educación por Departamento
-    """
-    # Solicitar el año de inicio y fin para la comparación
-    año_inicio = int(input("Ingrese el año de inicio para la comparación (e.g., 2011): "))
-    año_fin = int(input("Ingrese el año de fin para la comparación (e.g., 2021): "))
-
-    # Filtrar los datos para el período seleccionado
-    df_pbi_filtrado = df_pbi[[año_inicio, año_fin, 'Departamento']].copy()
-    df_gasto_filtrado = df_gasto_edu[[año_inicio, año_fin, 'Departamento']].copy()
-
-    # Calcular el crecimiento
-    df_pbi_filtrado['Crecimiento_PBI'] = ((df_pbi_filtrado[año_fin] - df_pbi_filtrado[año_inicio]) / df_pbi_filtrado[año_inicio]) * 100
-    df_gasto_filtrado['Crecimiento_Gasto'] = ((df_gasto_filtrado[año_fin] - df_gasto_filtrado[año_inicio]) / df_gasto_filtrado[año_inicio]) * 100
-
-    # Crear el gráfico
-    fig, ax = plt.subplots(figsize=(14, 8))
-    ancho_barras = 0.4  # Ancho de las barras
-
-    # Posiciones de las barras
-    indices = range(len(df_pbi_filtrado))
-
-    # Crear las barras para el PIB per cápita
-    barras_pbi = ax.bar([i - ancho_barras / 2 for i in indices], df_pbi_filtrado['Crecimiento_PBI'], width=ancho_barras, label='Crecimiento PIB per cápita (%)')
-
-    # Crear las barras para el gasto en educación
-    barras_gasto = ax.bar([i + ancho_barras / 2 for i in indices], df_gasto_filtrado['Crecimiento_Gasto'], width=ancho_barras, label='Crecimiento Gasto en Educación (%)')
-
-    # Etiquetas y títulos
-    ax.set_xlabel('Departamentos')
-    ax.set_ylabel('Crecimiento (%)')
-    ax.set_title(f'Comparación del Crecimiento del PIB per cápita y el Gasto en Educación\npor Departamento del {año_inicio} al {año_fin}')
-    ax.set_xticks(indices)
-    ax.set_xticklabels(df_pbi_filtrado['Departamento'], rotation=90)
-    ax.legend()
-
-    # Mostrar el gráfico
-    plt.tight_layout()
+    # Regiones
+    costa = ['Áncash', 'Arequipa', 'Prov. Const. del Callao', 'Ica', 'La Libertad', 'Lambayeque', 'Lima', 'Moquegua', 'Piura', 'Tacna', 'Tumbes']
+    sierra = ['Apurímac', 'Ayacucho', 'Cajamarca', 'Cusco', 'Huancavelica', 'Huánuco', 'Junín', 'Pasco', 'Puno']
+    selva = ['Amazonas', 'Loreto', 'Madre de Dios', 'San Martín', 'Ucayali']
+    
+    regiones = {'Costa': costa, 'Sierra': sierra, 'Selva': selva}
+    
+    año = pedir_año()
+    
+    # Creamos diccionarios de listas para almacenar datos de cada nivel académico en cada región
+    datos_inicial = {'Costa': [], 'Sierra': [], 'Selva': []}
+    datos_primaria = {'Costa': [], 'Sierra': [], 'Selva': []}
+    datos_secundaria = {'Costa': [], 'Sierra': [], 'Selva': []}
+    
+    for region, departamentos in regiones.items():
+        for departamento in departamentos:
+            for i in range(len(df_relacion_pbi_educacion)):
+                if df_relacion_pbi_educacion['Departamento / Nivel educativo'][i] == departamento:
+                    datos_inicial[region].append(df_relacion_pbi_educacion[año][i+1])
+                    datos_primaria[region].append(df_relacion_pbi_educacion[año][i+2])
+                    datos_secundaria[region].append(df_relacion_pbi_educacion[año][i+3])
+    
+    prom_inicial = []
+    prom_primaria = []
+    prom_secundaria = []
+    for region in regiones:
+        prom_inicial.append(round(sum(datos_inicial[region]) / len(datos_inicial[region]), 4))
+        prom_primaria.append(round(sum(datos_primaria[region]) / len(datos_primaria[region]), 4))
+        prom_secundaria.append(round(sum(datos_secundaria[region]) / len(datos_secundaria[region]), 4))
+    
+    # Crear DataFrame
+    df_promedios = pd.DataFrame({
+        'Region': list(regiones.keys()),
+        'Inicial': prom_inicial,
+        'Primaria': prom_primaria,
+        'Secundaria': prom_secundaria
+    })
+    
+    # Generación del gráfico
+    ancho_barras = 0.2
+    x = np.arange(len(regiones))
+    
+    plt.bar(x - ancho_barras, prom_inicial, width=ancho_barras, label='Inicial')
+    plt.bar(x, prom_primaria, width=ancho_barras, label='Primaria')
+    plt.bar(x + ancho_barras, prom_secundaria, width=ancho_barras, label='Secundaria')
+    
+    plt.xticks(x, regiones.keys())
+    plt.xlabel('REGIONES')
+    plt.ylabel('GASTO(SOLES)/PBI PER CAPITA')
+    plt.title(f'RELACION DEL PBI PER CAPITA Y EL GASTO PUBLICO POR ALUMNO \nEN LOS TRES NIVELES DE EDUCACIÓN PARA EL AÑO {str(año)} \nDE LAS REGIONES [Costa, Sierra, Selva]')
+    plt.legend()
     plt.show()
-        
+    
+    return df_promedios
+
 
 '--------------------------------------------------------------------------------'
-#ruta1 = "C:/Sebastian/UNIVERSIDAD DEL PACÕFICO/2024-1/TÈcnicas de ProgramaciÛn/Proyecto/Para crear Tabla PBI per c·pita/PBI POR DEPARTAMENTO 2007-2022.xlsx"
-#ruta2 = "C:/Sebastian/UNIVERSIDAD DEL PACÕFICO/2024-1/TÈcnicas de ProgramaciÛn/Proyecto/Para crear Tabla PBI per c·pita/CRECIMIENTO POBLACIONAL 2007-2022.xlsx"
-#ruta3 = "C:/Sebastian/UNIVERSIDAD DEL PACÕFICO/2024-1/TÈcnicas de ProgramaciÛn/Proyecto/Para crear Tabla PBI per c·pita/GASTO P⁄BLICO EDUCACI”N B¡SICA REGULAR.xlsx"
-ruta1 = "C:/Users/USER/Downloads/PBI POR DEPARTAMENTO 2007-2022.xlsx"
-ruta2 = "C:/Users/USER/Downloads/CRECIMIENTO POBLACIONAL 2007-2022.xlsx"
-ruta3 = "C:/Users/USER/Downloads/GASTO PÚBLICO EDUCACIÓN BÁSICA REGULAR.xlsx"
+ruta1 = "C:/Sebastian/UNIVERSIDAD DEL PACÍFICO/2024-1/Técnicas de Programación/Proyecto/Para crear Tabla PBI per cápita/PBI POR DEPARTAMENTO 2007-2022.xlsx"
+ruta2 = "C:/Sebastian/UNIVERSIDAD DEL PACÍFICO/2024-1/Técnicas de Programación/Proyecto/Para crear Tabla PBI per cápita/CRECIMIENTO POBLACIONAL 2007-2022.xlsx"
+ruta3 = "C:/Sebastian/UNIVERSIDAD DEL PACÍFICO/2024-1/Técnicas de Programación/Proyecto/Para crear Tabla PBI per cápita/GASTO PÚBLICO EDUCACIÓN BÁSICA REGULAR.xlsx"
+ruta4 = "C:/Sebastian/UNIVERSIDAD DEL PACÍFICO/2024-1/Técnicas de Programación/Proyecto/Para crear Tabla PBI per cápita/OPCIONAL. TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2012 - 2022.xlsx"
 
+#ruta1 = "C:/Users/ws.mincholar/Downloads/PBI POR DEPARTAMENTO 2007-2022.xlsx"
+#ruta2 = "C:/Users/ws.mincholar/Downloads/CRECIMIENTO POBLACIONAL 2007-2022.xlsx"
+#ruta3 = "C:/Users/ws.mincholar/Downloads/GASTO PÚBLICO POR ALUMNO EN EDUCACIÓN BÁSICA REGULAR 2011-2021.xlsx"
+#ruta4 = "C:/Users/sebas/Downloads/OPCIONAL. TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2012 - 2022.xlsx"
+
+#---Carga  y limpueza de DF PBI y POBLACION
 df_pbi,df_pob = cargarDF_PBI_POB(ruta1, ruta2)
-
 df_pbi = limpiarDF(df_pbi)
 df_pob = limpiarDF(df_pob)
 #print(df_pbi)
 #print(df_pob)
 
+#---Creacion de nuevo df del pbi per cápita
 df_pbi_percapita = estabelecerDF_PBIpercapita(df_pbi, df_pob)
 #print(df_pbi_percapita)
+
+#---Carga del df de gasto en público por alumno en educacion
 df_gasto_edu = cargarDF_gasto_educacion(ruta3)
 #print(df_gasto_edu)
 
+#---Establecimiento de la relacion entre ingreso (pbi per capita) y gasto
 df_relacion_pbi_educacion = establecer_relacion_pbi_educacion(df_gasto_edu, df_pbi_percapita)
 #print(df_relacion_pbi_educacion)
+
+#---Carga del df de analfabetismo
+df_analfabetismo = cargar_df_analfabetismo(ruta4)
+df_an_con_tasa_prom = DF_con_tasa_promedio_analfabetismo(df_analfabetismo)
+#grafico_analfabetismo_tasa_promedio_por_dpto(df_an_con_tasa_prom)
+
+#---Gráfico dashboard
+grafico_dashboard()
 
 
 print('''Opciones de graficos:
@@ -502,9 +794,14 @@ e) Relación entre el gasto público en educación (inicial, primaria o secundar
   
 f) Evolución de la relación entre el gasto público en educación (inicial, primaria o secundaria) y el PIB per cápita de las regiones del Perú durante el periodo 2011-2021
 
+g) Evolución de la relación entre el gasto público en educación (inicial, primaria y secundaria) y el PIB per cápita de las regiones del Perú para el año de su elección, dentro del período 2011-2021
+    
     ''')
-      
-opcion = input('Ingrese la opcion de gráfico a utilizar: ')
+
+opcion = input('Ingrese la opcion de gráfico a utilizar: ').lower()
+
+while opcion not in ['a','b','c','d','e','f','g','']:
+    opcion = input('Ingrese la opcion de gráfico a utilizar: ').lower()
 
 
 if opcion == 'a':
@@ -524,7 +821,11 @@ elif opcion == 'e':
     graf_e()
 elif opcion == 'f':
     print('\nGrafico: Evolución de la relación entre el gasto público en educación (inicial, primaria o secundaria) y el PIB per cápita de las regiones del Perú durante el periodo 2011-2021\n')
-    graf_f()
+    df = graf_f()
+    print(df)
 elif opcion == 'g':
-    print('\nGrafico: Comparación del Crecimiento del PIB per cápita y el Gasto en Educación por Departamento\n')
-    graf_g()
+    print('\nGrafico: Evolución de la relación entre el gasto público en educación (inicial, primaria y secundaria) y el PIB per cápita de las regiones del Perú para el año de su elección, dentro del período 2011-2021\n')
+    df = graf_g()
+    print(df)
+elif opcion == '':
+    print('No se eligió ninguna opción. Vuelva a ejecutar el código')
