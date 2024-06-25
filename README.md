@@ -6,11 +6,12 @@ Este proyecto tiene como objetivo analizar la relación entre el PBI per cápita
 
 ### Archivos Principales
 
-- `CODIGO_TP.txt`: Contiene el código principal para cargar, limpiar y analizar los datos, así como para generar gráficos.
-- `PBI_POBLACION.xlsx`: Datos de PBI por departamento y crecimiento poblacional.
-- `GASTO_EDUCACION.xlsx`: Datos del gasto público en educación básica regular.
-- `ANALFABETISMO.xlsx`: Datos de la tasa de analfabetismo de la población de 15 y más años de edad.
-
+- `Código.txt`: Contiene el código principal para cargar, limpiar y analizar los datos, así como para generar gráficos.
+- `1. PBI POR DEPARTAMENTO 2007-2022.xlsx`: Datos de PBI por departamento.
+- `2. CRECIMIENTO POBLACIONAL 2007-2022.xlsx`: Datos de crecimiento poblacional por departamento.
+- `3. GASTO PÚBLICO POR ALUMNO EN EDUCACIÓN BÁSICA REGULAR 2011-2021.xlsx`: Datos del gasto público en educación básica regular.
+- `TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2012 - 2022.xlsx`: Datos de la tasa de analfabetismo de la población de 15 y más años de edad.
+  
 ### Funcionalidades del Código
 
 #### Cargar y Limpiar Datos:
