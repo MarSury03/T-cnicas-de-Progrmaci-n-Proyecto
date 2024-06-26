@@ -1,11 +1,11 @@
 import pandas as pd
-pd.options.mode.chained_assignment = None  # deshabilitar las advertencias de asignaciÃ³n en cadena
+pd.options.mode.chained_assignment = None  # deshabilitar las advertencias de asignación en cadena
 from matplotlib import pyplot as plt
 
 ruta1 = "C:/Users/Usuario/Downloads/1. PBI POR DEPARTAMENTO 2007-2022.xlsx"
 ruta2 = "C:/Users/Usuario/Downloads/2. CRECIMIENTO POBLACIONAL 2007-2022.xlsx"
-ruta3 = "C:/Users/Usuario/Downloads/3. GASTO PÃBLICO POR ALUMNO EN EDUCACIÃN BÃSICA REGULAR 2011-2021.xlsx"
-ruta4 = "C:/Users/Usuario/Downloads/4. TASA DE ANALFABETISMO DE LA POBLACIÃN DE 15 Y MÃS AÃOS DE EDAD, SEGÃN ÃMBITO GEOGRÃFICO, 2008-2022.xlsx"
+ruta3 = "C:/Users/Usuario/Downloads/3. GASTO PÚBLICO POR ALUMNO EN EDUCACIÓN BÁSICA REGULAR 2011-2021.xlsx"
+ruta4 = "C:/Users/Usuario/Downloads/4. TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2008-2022.xlsx"
 
 # CARGAR Y LIMPIAR BASES DE DATOS
 
@@ -29,14 +29,14 @@ def cargar_y_limpiar_DF_PBI_POB(ruta1,ruta2):
     df_pbi = df_pbi[2:]
     df_pob = df_pob[2:]
     
-    #quitamos filas de mÃ¡s (para poder tener las mismas filas en ambas tablas)
+    #quitamos filas de más (para poder tener las mismas filas en ambas tablas)
     df_pbi.drop([2,28,29,30],inplace=True)
     
     #reseteamos los indices
     df_pbi.reset_index(drop=True,inplace=True)
     df_pob.reset_index(drop=True,inplace=True)
     
-    #quitamos las columnas con los aÃ±os que no vamos a trabajar
+    #quitamos las columnas con los años que no vamos a trabajar
     df_pbi.drop([2007,2008,2009,2010,2022],axis=1,inplace=True)
     df_pob.drop([2007,2008,2009,2010,2022],axis=1,inplace=True)
     
@@ -56,12 +56,12 @@ def cargar_y_limpiar_DF_gasto_educacion(ruta3):
     df_gasto_edu = df_gasto_edu.drop([0, 1, 2])
     df_gasto_edu.reset_index(drop=True, inplace=True)
 
-    # Rellenamos valores nulos con cadenas vacÃ­as
+    # Rellenamos valores nulos con cadenas vacías
     df_gasto_edu.fillna("", inplace=True)
 
-    # Eliminamos columnas correspondientes a los aÃ±os 1999-2010
-    aÃ±os_a_eliminar = list(range(1999, 2011))
-    df_gasto_edu.drop(aÃ±os_a_eliminar, axis=1, inplace=True)
+    # Eliminamos columnas correspondientes a los años 1999-2010
+    años_a_eliminar = list(range(1999, 2011))
+    df_gasto_edu.drop(años_a_eliminar, axis=1, inplace=True)
 
     # Limpiamos los nombres de las filas eliminando espacios y guiones
     nombres_filas = df_gasto_edu['Nivel educativo /\nDepartamento'].tolist()
@@ -82,18 +82,18 @@ def cargar_y_limpiar_DF_analfabetismo(ruta4):
     df = pd.DataFrame(archivo)
     
     # Extraemos los departamentos desde la columna adecuada
-    departamentos = df['TASA DE ANALFABETISMO DE LA POBLACIÃN DE 15 Y MÃS AÃOS DE EDAD, SEGÃN ÃMBITO GEOGRÃFICO, 2012 - 2022']
+    departamentos = df['TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2012 - 2022']
     departamentos = departamentos.iloc[10:].reset_index(drop=True)
     
     # Eliminamos la columna innecesaria y las filas iniciales
-    df = df.drop(columns=['TASA DE ANALFABETISMO DE LA POBLACIÃN DE 15 Y MÃS AÃOS DE EDAD, SEGÃN ÃMBITO GEOGRÃFICO, 2012 - 2022'])
+    df = df.drop(columns=['TASA DE ANALFABETISMO DE LA POBLACIÓN DE 15 Y MÁS AÑOS DE EDAD, SEGÚN ÁMBITO GEOGRÁFICO, 2012 - 2022'])
     df = df[10:]
     df = df.reset_index(drop=True)
     
-    # Creamos las nuevas columnas con los aÃ±os y ajustamos los nombres de las columnas
+    # Creamos las nuevas columnas con los años y ajustamos los nombres de las columnas
     columnas = []
-    for aÃ±o in range(2008, 2023):
-        columnas.append(aÃ±o)
+    for año in range(2008, 2023):
+        columnas.append(año)
     
     df.columns = columnas
     
@@ -110,20 +110,20 @@ def cargar_y_limpiar_DF_analfabetismo(ruta4):
 
 def establecer_DF_PBIpercapita(df_pbi, df_pob):
     
-    # Obtenemos la lista de departamentos, excluyendo la Ãºltima fila, y luego agregamos 'Total'
+    # Obtenemos la lista de departamentos, excluyendo la última fila, y luego agregamos 'Total'
     departamentos = df_pbi['Departamento'][:-1].tolist()
     departamentos.append('Total')
 
-    # Creamos un nuevo DataFrame para el PBI per cÃ¡pita con los departamentos como primera columna
+    # Creamos un nuevo DataFrame para el PBI per cápita con los departamentos como primera columna
     df_pbi_percapita = pd.DataFrame(departamentos, columns=['Departamento'])
 
-    # Calculamos el PBI per cÃ¡pita para los aÃ±os 2011 a 2021
-    for aÃ±o in range(2011, 2022):
+    # Calculamos el PBI per cápita para los años 2011 a 2021
+    for año in range(2011, 2022):
         pbi_per_capita_anno = []
-        for pbi, pob in zip(df_pbi[aÃ±o], df_pob[aÃ±o]):
+        for pbi, pob in zip(df_pbi[año], df_pob[año]):
             pbi_per_capita = round(pbi * 1000 / pob, 2)
             pbi_per_capita_anno.append(pbi_per_capita)
-        df_pbi_percapita[aÃ±o] = pbi_per_capita_anno
+        df_pbi_percapita[año] = pbi_per_capita_anno
     
     # Reorganizamos las filas para poner 'Total' al principio
     df_pbi_percapita1 = df_pbi_percapita.iloc[[-1]]
@@ -138,31 +138,31 @@ def establecer_DF_relacion_pbi_educacion(df_gasto_edu, df_pbi_percapita):
     nombres_filas = df_gasto_edu['Departamento / Nivel educativo'].tolist()
     df_relacion_pbi_educacion = pd.DataFrame(nombres_filas, columns=['Departamento / Nivel educativo'])
 
-    aÃ±o = 2011
+    año = 2011
     
     for a in range(11):
         relacion_lista = []
         
-        # Iteramos sobre cada departamento y su correspondiente PBI per cÃ¡pita en el aÃ±o actual
-        for departamento, pbi in zip(df_pbi_percapita['Departamento'], df_pbi_percapita[aÃ±o]):
+        # Iteramos sobre cada departamento y su correspondiente PBI per cápita en el año actual
+        for departamento, pbi in zip(df_pbi_percapita['Departamento'], df_pbi_percapita[año]):
             for i in range(len(df_gasto_edu)):
                 if df_gasto_edu['Departamento / Nivel educativo'][i] == departamento:
                     relacion_lista.append('')
                     
-                    # Calculamos la relaciÃ³n entre el gasto educativo y el PBI per cÃ¡pita para los tres niveles educativos
+                    # Calculamos la relación entre el gasto educativo y el PBI per cápita para los tres niveles educativos
                     for j in range(1, 4):
-                        relacion = df_gasto_edu[aÃ±o][i + j] / pbi
+                        relacion = df_gasto_edu[año][i + j] / pbi
                         relacion_lista.append(round(relacion, 4))
                         
-        # AÃ±adimos la lista de relaciones calculadas al DataFrame df_relacion_pbi_educacion
-        df_relacion_pbi_educacion[aÃ±o] = relacion_lista
-        aÃ±o += 1
+        # Añadimos la lista de relaciones calculadas al DataFrame df_relacion_pbi_educacion
+        df_relacion_pbi_educacion[año] = relacion_lista
+        año += 1
     
     return df_relacion_pbi_educacion
 
 
 def establecer_DF_tasa_promedio_analfabetismo(df):
-    # Establecemos el Ã­ndice del DataFrame como 'Departamento'
+    # Establecemos el índice del DataFrame como 'Departamento'
     df = df.set_index('Departamento')
     
     # Transponemos el DataFrame para que los departamentos sean las columnas
@@ -174,13 +174,13 @@ def establecer_DF_tasa_promedio_analfabetismo(df):
         promedio = df[departamento].mean()
         promedios.append(round(promedio, 4))
     
-    # Volvemos a transponer el DataFrame para que los aÃ±os sean las columnas nuevamente
+    # Volvemos a transponer el DataFrame para que los años sean las columnas nuevamente
     df = df.transpose()
     
-    # AÃ±adimos la columna de 'Tasa promedio' de analfabetismo
+    # Añadimos la columna de 'Tasa promedio' de analfabetismo
     df.insert(len(df.columns), 'Tasa promedio', promedios)
     
-    # Reseteamos los Ã­ndices del DataFrame
+    # Reseteamos los índices del DataFrame
     df.reset_index(inplace=True)
     
     return df
@@ -192,41 +192,41 @@ def grafico_analfabetismo_tasa_promedio_por_dpto(df):
     # Filtramos solo las columnas necesarias para graficar
     df = df[['Departamento', 'Tasa promedio']]
     
-    # Ordenamos la data de mayor a menor segÃºn la tasa promedio
+    # Ordenamos la data de mayor a menor según la tasa promedio
     df = df.sort_values(by='Tasa promedio', ascending=False)
     
-    # Configuramos la figura del grÃ¡fico
+    # Configuramos la figura del gráfico
     plt.figure(figsize=(8, 8))
     plt.xticks(rotation=90)
     
-    # Barras para las 4 tasas mÃ¡s altas (rojo)
-    barras_grandes = plt.bar(df['Departamento'].iloc[:4], df['Tasa promedio'].iloc[:4], color='red', label='Tasas mÃ¡s altas')
+    # Barras para las 4 tasas más altas (rojo)
+    barras_grandes = plt.bar(df['Departamento'].iloc[:4], df['Tasa promedio'].iloc[:4], color='red', label='Tasas más altas')
     
     # Barras para el rango intermedio (gris)
     plt.bar(df['Departamento'].iloc[4:21], df['Tasa promedio'].iloc[4:21], color='grey')
     
-    # Barras para las 4 tasas mÃ¡s bajas (verde)
-    barras_pequeÃ±as = plt.bar(df['Departamento'].iloc[-4:], df['Tasa promedio'].iloc[-4:], color='green', label='Tasas mÃ¡s bajas')
+    # Barras para las 4 tasas más bajas (verde)
+    barras_pequeñas = plt.bar(df['Departamento'].iloc[-4:], df['Tasa promedio'].iloc[-4:], color='green', label='Tasas más bajas')
 
-    # AÃ±adimos etiquetas de valores encima de las barras mÃ¡s altas
+    # Añadimos etiquetas de valores encima de las barras más altas
     for bar in barras_grandes:
         valor_Y = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2, valor_Y, round(valor_Y, 2), va='bottom', ha='center', fontsize=8, color='black', fontweight='bold', rotation=50)
     
-    # AÃ±adimos etiquetas de valores encima de las barras mÃ¡s bajas
-    for bar in barras_pequeÃ±as:
+    # Añadimos etiquetas de valores encima de las barras más bajas
+    for bar in barras_pequeñas:
         valor_Y = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2, valor_Y, round(valor_Y, 2), va='bottom', ha='center', fontsize=8, color='black', fontweight='bold', rotation=50)
     
-    # Configuramos el tÃ­tulo y etiquetas de los ejes
-    plt.title('TASA PROMEDIO DE ANALFABETISMO EN LOS DEPARTAMENTOS \nDEL PERÃ DESDE EL 2011 AL 2021 \n (Porcentaje respecto del total de la poblaciÃ³n mayor a 15 aÃ±os)')
-    plt.ylabel('% DE POBLACIÃN ANALFABETA')
+    # Configuramos el título y etiquetas de los ejes
+    plt.title('TASA PROMEDIO DE ANALFABETISMO EN LOS DEPARTAMENTOS \nDEL PERÚ DESDE EL 2011 AL 2021 \n (Porcentaje respecto del total de la población mayor a 15 años)')
+    plt.ylabel('% DE POBLACIÓN ANALFABETA')
     plt.xlabel('DEPARTAMENTOS')
     
     # Mostramos la leyenda
     plt.legend()
     
-    # Mostramos el grÃ¡fico
+    # Mostramos el gráfico
     plt.show()
     
 
@@ -239,12 +239,12 @@ def pedir_departamento():
         # Corregimos errores comunes en el ingreso del nombre del departamento
         correcciones = {
             'De ': 'de ',
-            'Apurimac': 'ApurÃ­mac',
+            'Apurimac': 'Apurímac',
             'Callao': 'Prov. Const. del Callao',
-            'Ancash': 'Ãncash',
-            'Huanuco': 'HuÃ¡nuco',
-            'Junin': 'JunÃ­n',
-            'Martin': 'MartÃ­n'
+            'Ancash': 'Áncash',
+            'Huanuco': 'Huánuco',
+            'Junin': 'Junín',
+            'Martin': 'Martín'
         }
         
         # Aplicamos las correcciones definidas
@@ -252,38 +252,38 @@ def pedir_departamento():
             if error in dep:
                 dep = dep.replace(error, correccion)
         
-        # Validamos que el departamento ingresado sea vÃ¡lido
+        # Validamos que el departamento ingresado sea válido
         if dep in df_pbi_percapita['Departamento'].tolist():
             return dep
         else:
-            # Solicitamos al usuario que ingrese nuevamente si el departamento no es vÃ¡lido
-            print('Error. Ingrese un departamento vÃ¡lido.')
+            # Solicitamos al usuario que ingrese nuevamente si el departamento no es válido
+            print('Error. Ingrese un departamento válido.')
 
 
 def pedir_nivel_acad():
     nivel_acad = input('Ingrese el nivel academico de interes: ').title()
     
     while nivel_acad not in ['Inicial','Primaria','Secundaria']:
-        nivel_acad = input('Nivel acadÃ©mico no encontrado. \nIngrese "Inicial", "Primaria" o "Secundaria": ').title()
+        nivel_acad = input('Nivel académico no encontrado. \nIngrese "Inicial", "Primaria" o "Secundaria": ').title()
     
     return nivel_acad
 
 
-def pedir_aÃ±o():
-    aÃ±o = int(input('Ingrese el aÃ±o a analizar: '))
+def pedir_año():
+    año = int(input('Ingrese el año a analizar: '))
     
-    while aÃ±o < 2011 or aÃ±o > 2021:
-        aÃ±o = int(input('Ingrese un aÃ±o entre 2011 y 2021: '))
+    while año < 2011 or año > 2021:
+        año = int(input('Ingrese un año entre 2011 y 2021: '))
     
-    return aÃ±o
+    return año
 
 
 # ESTABLECER DASHBOARD 
 
 def grafico_ingreso(df_pbi_percapita,cant_departamentos,departamentos_a_comparar):
     plt.subplot(2,2,1)
-    #sacamos los aÃ±os para q posteriormente sean el eje x del grafico de lineas
-    aÃ±os = df_pbi_percapita.columns.tolist()[1:]
+    #sacamos los años para q posteriormente sean el eje x del grafico de lineas
+    años = df_pbi_percapita.columns.tolist()[1:]
     
     #quitamos el total
     df_pbi_percapita = df_pbi_percapita.iloc[1:].reset_index(drop=True)
@@ -296,29 +296,29 @@ def grafico_ingreso(df_pbi_percapita,cant_departamentos,departamentos_a_comparar
     
     for i in range(cant_departamentos):
         colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
-        plt.plot(aÃ±os,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
         
-        # Encontrar el Ã­ndice del mÃ¡ximo y mÃ­nimo
+        # Encontrar el índice del máximo y mínimo
         indice_max = datos[i].index(max(datos[i]))
         indice_min = datos[i].index(min(datos[i]))
         
-        # AÃ±adir puntos para mÃ¡ximo y mÃ­nimo
-        plt.scatter(aÃ±os[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'MÃ¡x: {max(datos[i]):.2f}')
-        plt.scatter(aÃ±os[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'MÃ­n: {min(datos[i]):.2f}')
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}')
     
-    plt.xticks(aÃ±os,rotation=90)    
+    plt.xticks(años,rotation=90)    
     plt.title(f'EVOLUCION DEL INGRESO PER CAPITA DE LOS DEPARTAMENTOS \n{departamentos_a_comparar}')
-    plt.xlabel('AÃOS')
+    plt.xlabel('AÑOS')
     plt.ylabel('PBI PER CAPITA ANUAL (SOLES)')
     
-    plt.grid(True)  #pa aÃ±adir cuadriculas
+    plt.grid(True)  #pa añadir cuadriculas
     plt.legend()
     
 
 def grafico_gasto(df_gasto_edu,cant_departamentos,departamentos_a_comparar):
     plt.subplot(2,2,2)
-    #sacamos los aÃ±os para q posteriormente sean el eje x del grafico de lineas
-    aÃ±os = df_gasto_edu.columns.tolist()[1:]
+    #sacamos los años para q posteriormente sean el eje x del grafico de lineas
+    años = df_gasto_edu.columns.tolist()[1:]
     
     datos = []
     for departamento in departamentos_a_comparar:
@@ -326,39 +326,39 @@ def grafico_gasto(df_gasto_edu,cant_departamentos,departamentos_a_comparar):
             if df_gasto_edu['Departamento / Nivel educativo'][i] == departamento:
                 df_filtrada = df_gasto_edu.iloc[i+1:i+4].reset_index(drop=True)
                 
-                #para cada aÃ±o, calculamos el promedio del gasto en inicial, prim y sec
-                gastos_promedio_aÃ±oX = []
-                for aÃ±o in aÃ±os:
-                    prom_aÃ±o = round(df_filtrada[aÃ±o].mean(),4)
-                    gastos_promedio_aÃ±oX.append(prom_aÃ±o)
+                #para cada año, calculamos el promedio del gasto en inicial, prim y sec
+                gastos_promedio_añoX = []
+                for año in años:
+                    prom_año = round(df_filtrada[año].mean(),4)
+                    gastos_promedio_añoX.append(prom_año)
                 
-                datos.append(gastos_promedio_aÃ±oX)
+                datos.append(gastos_promedio_añoX)
                     
     for i in range(cant_departamentos):
         colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
-        plt.plot(aÃ±os,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
         
-        # Encontrar el Ã­ndice del mÃ¡ximo y mÃ­nimo
+        # Encontrar el índice del máximo y mínimo
         indice_max = datos[i].index(max(datos[i]))
         indice_min = datos[i].index(min(datos[i]))
         
-        # AÃ±adir puntos para mÃ¡ximo y mÃ­nimo
-        plt.scatter(aÃ±os[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'MÃ¡x: {max(datos[i]):.2f}')
-        plt.scatter(aÃ±os[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'MÃ­n: {min(datos[i]):.2f}')
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}')
     
-    plt.xticks(aÃ±os,rotation=90)    
-    plt.title(f'EVOLUCION DEL GASTO EN EDUCACIÃN POR ALUMNO DE LOS DEPARTAMENTOS \n{departamentos_a_comparar}')
-    plt.xlabel('AÃOS')
+    plt.xticks(años,rotation=90)    
+    plt.title(f'EVOLUCION DEL GASTO EN EDUCACIÓN POR ALUMNO DE LOS DEPARTAMENTOS \n{departamentos_a_comparar}')
+    plt.xlabel('AÑOS')
     plt.ylabel('GASTO POR ALUMNO ANUAL (SOLES)')
     
-    plt.grid(True)  #pa aÃ±adir cuadriculas
+    plt.grid(True)  #pa añadir cuadriculas
     plt.legend()
     
 
 def grafico_analfabetismo(df_analfabetismo,cant_departamentos,departamentos_a_comparar):
     plt.subplot(2,2,3)
-    #sacamos los aÃ±os para q posteriormente sean el eje x del grafico de lineas
-    aÃ±os = df_analfabetismo.columns.tolist()[1:]
+    #sacamos los años para q posteriormente sean el eje x del grafico de lineas
+    años = df_analfabetismo.columns.tolist()[1:]
     
     datos = []
     for departamento in departamentos_a_comparar:
@@ -368,29 +368,29 @@ def grafico_analfabetismo(df_analfabetismo,cant_departamentos,departamentos_a_co
     
     for i in range(cant_departamentos):
         colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
-        plt.plot(aÃ±os,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
         
-        # Encontrar el Ã­ndice del mÃ¡ximo y mÃ­nimo
+        # Encontrar el índice del máximo y mínimo
         indice_max = datos[i].index(max(datos[i]))
         indice_min = datos[i].index(min(datos[i]))
         
-        # AÃ±adir puntos para mÃ¡ximo y mÃ­nimo
-        plt.scatter(aÃ±os[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'MÃ¡x: {max(datos[i]):.2f}')
-        plt.scatter(aÃ±os[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'MÃ­n: {min(datos[i]):.2f}')
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}')
     
-    plt.xticks(aÃ±os,rotation=90)    
+    plt.xticks(años,rotation=90)    
     plt.title(f'EVOLUCION DE LA TASA DE ANALFABETISMO DE LOS DEPARTAMENTOS \n{departamentos_a_comparar}')
-    plt.xlabel('AÃOS')
+    plt.xlabel('AÑOS')
     plt.ylabel('TASA DE ANALFABETISMO ANUAL')
     
-    plt.grid(True)  #pa aÃ±adir cuadriculas
+    plt.grid(True)  #pa añadir cuadriculas
     plt.legend()
     
     
 def grafico_relacion_ingreso_gasto(df_relacion_pbi_educacion,cant_departamentos,departamentos_a_comparar):
     plt.subplot(2,2,4)
     
-    aÃ±os = df_relacion_pbi_educacion.columns.tolist()[1:]
+    años = df_relacion_pbi_educacion.columns.tolist()[1:]
     
     datos = []
     for departamento in departamentos_a_comparar:
@@ -398,29 +398,29 @@ def grafico_relacion_ingreso_gasto(df_relacion_pbi_educacion,cant_departamentos,
             if df_relacion_pbi_educacion['Departamento / Nivel educativo'][i] == departamento:
                 df_filtrada = df_relacion_pbi_educacion.iloc[i+1:i+4].reset_index(drop=True)
                 
-                #para cada aÃ±o, calculamos el promedio de la relacion en inicial, prim y sec
-                relacion_promedio_aÃ±oX = []
-                for aÃ±o in aÃ±os:
-                    prom_aÃ±o = round(df_filtrada[aÃ±o].mean(),4)
-                    relacion_promedio_aÃ±oX.append(prom_aÃ±o)
+                #para cada año, calculamos el promedio de la relacion en inicial, prim y sec
+                relacion_promedio_añoX = []
+                for año in años:
+                    prom_año = round(df_filtrada[año].mean(),4)
+                    relacion_promedio_añoX.append(prom_año)
                 
-                datos.append(relacion_promedio_aÃ±oX)
+                datos.append(relacion_promedio_añoX)
     
     for i in range(cant_departamentos):
         colores = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
-        plt.plot(aÃ±os,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
+        plt.plot(años,datos[i],label=departamentos_a_comparar[i],color=colores[i]) 
         
-        # Encontrar el Ã­ndice del mÃ¡ximo y mÃ­nimo
+        # Encontrar el índice del máximo y mínimo
         indice_max = datos[i].index(max(datos[i]))
         indice_min = datos[i].index(min(datos[i]))
         
-        # AÃ±adir puntos para mÃ¡ximo y mÃ­nimo
-        plt.scatter(aÃ±os[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'MÃ¡x: {max(datos[i]):.2f}')
-        plt.scatter(aÃ±os[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'MÃ­n: {min(datos[i]):.2f}') 
+        # Añadir puntos para máximo y mínimo
+        plt.scatter(años[indice_max], datos[i][indice_max], color=colores[i], marker='o', s=100, label=f'Máx: {max(datos[i]):.2f}')
+        plt.scatter(años[indice_min], datos[i][indice_min], color=colores[i], marker='x', s=100, label=f'Mín: {min(datos[i]):.2f}') 
     
-    plt.xticks(aÃ±os,rotation=90)    
+    plt.xticks(años,rotation=90)    
     plt.title(f'EVOLUCION PROMEDIO DE LA RELACION ENTRE EL \nGASTO PUBLICO POR ALUMNO y PBI PER CAPITA DE LOS \nDEPARTAMENTOS {departamentos_a_comparar}')
-    plt.xlabel('AÃOS')
+    plt.xlabel('AÑOS')
     plt.ylabel('GASTO(SOLES)/PBI PER CAPITA')
     
     plt.grid()
@@ -467,13 +467,13 @@ def grafico_ingreso_gasto_relacion(df_pbi_percapita, df_gasto_edu, df_relacion_p
     
     plt.subplot(1,2,1)
     
-    # Obtenemos los ingresos per cÃ¡pita del departamento seleccionado
+    # Obtenemos los ingresos per cápita del departamento seleccionado
     ingresos = df_pbi_percapita.loc[df_pbi_percapita['Departamento'] == departamento].values.tolist()[0][1:]
     
-    # Obtenemos los aÃ±os
-    aÃ±os = df_gasto_edu.columns.tolist()[1:]
+    # Obtenemos los años
+    años = df_gasto_edu.columns.tolist()[1:]
     
-    # Lista para almacenar los gastos promedio de educaciÃ³n por aÃ±o
+    # Lista para almacenar los gastos promedio de educación por año
     gastos_promedio = []
     
     # Recorremos cada fila del DataFrame de gasto educativo para encontrar el departamento seleccionado
@@ -482,12 +482,12 @@ def grafico_ingreso_gasto_relacion(df_pbi_percapita, df_gasto_edu, df_relacion_p
             # Filtramos las filas correspondientes a inicial, primaria y secundaria
             df_filtrada = df_gasto_edu.iloc[i+1:i+4].reset_index(drop=True)
             
-            # Calculamos el promedio de gasto para cada aÃ±o
-            for aÃ±o in aÃ±os:
-                prom_aÃ±o = round(df_filtrada[aÃ±o].mean(), 4)
-                gastos_promedio.append(prom_aÃ±o)
+            # Calculamos el promedio de gasto para cada año
+            for año in años:
+                prom_año = round(df_filtrada[año].mean(), 4)
+                gastos_promedio.append(prom_año)
     
-    # Lista para almacenar las relaciones promedio entre gasto e ingreso por aÃ±o
+    # Lista para almacenar las relaciones promedio entre gasto e ingreso por año
     relaciones_promedio = []
     
     for i in range(len(df_relacion_pbi_educacion)):
@@ -495,31 +495,31 @@ def grafico_ingreso_gasto_relacion(df_pbi_percapita, df_gasto_edu, df_relacion_p
             # Filtramos las filas correspondientes a inicial, primaria y secundaria
             df_filtrada = df_relacion_pbi_educacion.iloc[i+1:i+4].reset_index(drop=True)
             
-            # Calculamos el promedio de la relaciÃ³n para cada aÃ±o
-            for aÃ±o in aÃ±os:
-                prom_aÃ±o = round(df_filtrada[aÃ±o].mean(), 4)
-                relaciones_promedio.append(prom_aÃ±o)
+            # Calculamos el promedio de la relación para cada año
+            for año in años:
+                prom_año = round(df_filtrada[año].mean(), 4)
+                relaciones_promedio.append(prom_año)
          
-    # Normalizamos los valores de ingresos, gastos y relaciones para comparaciÃ³n
+    # Normalizamos los valores de ingresos, gastos y relaciones para comparación
     ingresos_normalizados = normalizar(ingresos)
     gastos_normalizados = normalizar(gastos_promedio)
     relaciones_normalizadas = normalizar(relaciones_promedio)
 
-    # Colores para las lÃ­neas de los diferentes conjuntos de datos
+    # Colores para las líneas de los diferentes conjuntos de datos
     colores = ['blue', 'green', 'red']
     
-    # Graficamos las lÃ­neas normalizadas para ingresos, gastos y relaciones
-    plt.plot(aÃ±os, ingresos_normalizados, label='Ingreso per cÃ¡pita (Normalizado)', color=colores[0]) 
-    plt.plot(aÃ±os, gastos_normalizados, label='Gasto en educaciÃ³n por alumno (Normalizado)', color=colores[1])    
-    plt.plot(aÃ±os, relaciones_normalizadas, label='RelaciÃ³n entre el gasto e ingreso (Normalizado)', color=colores[2])     
+    # Graficamos las líneas normalizadas para ingresos, gastos y relaciones
+    plt.plot(años, ingresos_normalizados, label='Ingreso per cápita (Normalizado)', color=colores[0]) 
+    plt.plot(años, gastos_normalizados, label='Gasto en educación por alumno (Normalizado)', color=colores[1])    
+    plt.plot(años, relaciones_normalizadas, label='Relación entre el gasto e ingreso (Normalizado)', color=colores[2])     
     
-    # Configuramos las etiquetas y tÃ­tulo del grÃ¡fico
-    plt.xticks(aÃ±os, rotation=90)    
-    plt.title(f'EVOLUCIÃN DEL INGRESO PER CÃPITA, GASTO EN EDUCACIÃN POR ALUMNO Y \nRELACIÃN ENTRE EL GASTO PÃBLICO POR ALUMNO Y PBI PER CÃPITA DE {departamento.upper()}')
-    plt.xlabel('AÃOS')
+    # Configuramos las etiquetas y título del gráfico
+    plt.xticks(años, rotation=90)    
+    plt.title(f'EVOLUCIÓN DEL INGRESO PER CÁPITA, GASTO EN EDUCACIÓN POR ALUMNO Y \nRELACIÓN ENTRE EL GASTO PÚBLICO POR ALUMNO Y PBI PER CÁPITA DE {departamento.upper()}')
+    plt.xlabel('AÑOS')
     plt.ylabel('VALORES NORMALIZADOS')
     
-    plt.grid(True)  # AÃ±adimos cuadrÃ­cula al grÃ¡fico
+    plt.grid(True)  # Añadimos cuadrícula al gráfico
     plt.legend()  # Mostramos la leyenda
     
 
@@ -532,10 +532,10 @@ def grafico_analfabetismo_relacion(df_analfabetismo, df_relacion_pbi_educacion, 
     # Obtenemos las tasas de analfabetismo del departamento seleccionado
     tasas_analfabetismo = df_analfabetismo.loc[df_analfabetismo['Departamento'] == departamento].values.tolist()[0][1:]
     
-    # Obtenemos los aÃ±os
-    aÃ±os = df_analfabetismo.columns.tolist()[1:]
+    # Obtenemos los años
+    años = df_analfabetismo.columns.tolist()[1:]
     
-    # Lista para almacenar las relaciones promedio entre gasto e ingreso por aÃ±o
+    # Lista para almacenar las relaciones promedio entre gasto e ingreso por año
     relaciones_promedio = []
     
     for i in range(len(df_relacion_pbi_educacion)):
@@ -543,30 +543,30 @@ def grafico_analfabetismo_relacion(df_analfabetismo, df_relacion_pbi_educacion, 
             # Filtramos las filas correspondientes a inicial, primaria y secundaria
             df_filtrada = df_relacion_pbi_educacion.iloc[i+1:i+4].reset_index(drop=True)
             
-            # Calculamos el promedio de la relaciÃ³n para cada aÃ±o
-            for aÃ±o in aÃ±os:
-                prom_aÃ±o = round(df_filtrada[aÃ±o].mean(), 4)
-                relaciones_promedio.append(prom_aÃ±o)
+            # Calculamos el promedio de la relación para cada año
+            for año in años:
+                prom_año = round(df_filtrada[año].mean(), 4)
+                relaciones_promedio.append(prom_año)
          
-    # Normalizamos los valores de tasas y relaciones para comparaciÃ³n
+    # Normalizamos los valores de tasas y relaciones para comparación
     tasas_analfabetismo_normalizados = normalizar(tasas_analfabetismo)
     relaciones_normalizadas = normalizar(relaciones_promedio)
 
 
-    # Colores para las lÃ­neas de los diferentes conjuntos de datos
+    # Colores para las líneas de los diferentes conjuntos de datos
     colores = ['blue', 'red']
     
-    # Graficamos las lÃ­neas normalizadas para ingresos, gastos y relaciones
-    plt.plot(aÃ±os, tasas_analfabetismo_normalizados, label='Tasa de analfabetismo (Normalizado)', color=colores[0])     
-    plt.plot(aÃ±os, relaciones_normalizadas, label='RelaciÃ³n entre el gasto e ingreso (Normalizado)', color=colores[1])     
+    # Graficamos las líneas normalizadas para ingresos, gastos y relaciones
+    plt.plot(años, tasas_analfabetismo_normalizados, label='Tasa de analfabetismo (Normalizado)', color=colores[0])     
+    plt.plot(años, relaciones_normalizadas, label='Relación entre el gasto e ingreso (Normalizado)', color=colores[1])     
     
-    # Configuramos las etiquetas y tÃ­tulo del grÃ¡fico
-    plt.xticks(aÃ±os, rotation=90)    
-    plt.title(f'EVOLUCIÃN DE LA TASA DE ANALFABETISMO Y RELACIÃN ENTRE EL GASTO PÃBLICO \nPOR ALUMNO Y PBI PER CÃPITA DE {departamento.upper()}')
-    plt.xlabel('AÃOS')
+    # Configuramos las etiquetas y título del gráfico
+    plt.xticks(años, rotation=90)    
+    plt.title(f'EVOLUCIÓN DE LA TASA DE ANALFABETISMO Y RELACIÓN ENTRE EL GASTO PÚBLICO \nPOR ALUMNO Y PBI PER CÁPITA DE {departamento.upper()}')
+    plt.xlabel('AÑOS')
     plt.ylabel('VALORES NORMALIZADOS')
     
-    plt.grid(True)  # AÃ±adimos cuadrÃ­cula al grÃ¡fico
+    plt.grid(True)  # Añadimos cuadrícula al gráfico
     plt.legend()  # Mostramos la leyenda
     
 
