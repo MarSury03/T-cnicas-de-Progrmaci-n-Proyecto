@@ -13,8 +13,6 @@ Este proyecto tiene como objetivo analizar la relación entre el PBI per cápita
 
 ## Procedimiento
 
-### Procedimiento
-
 El procedimiento consta de los pasos que se muestran a continuación:
 
 #### Importación de las librerías
