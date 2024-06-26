@@ -29,7 +29,7 @@ Este proyecto tiene como objetivo analizar la relación entre el PBI per cápita
 #### Generar Gráficos:
 
 - `grafico_dashboard`: Genera un dashboard con varios gráficos.
-- `graf_a`, `graf_b`, `graf_c`, `graf_d`, `graf_e`, `graf_f`, `graf_g`: Generan gráficos específicos según las opciones del usuario.
+- `grafico_dashboard2`: Genera gráficos de departamentos específicos.
 
 ## Instalación
 
